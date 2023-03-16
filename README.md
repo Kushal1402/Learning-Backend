@@ -11,11 +11,14 @@ This repository is made just for learning backend coding in ***Node JS***, ***Ex
 
 ## Instruction to run in local
 
-`npm i` or `npm install` to install the required dependencies
+`npm i` or `npm install` to install the required dependencies .
 <br />
-`connect` to the mongo database through MongoDB Compass
+`connect` to the mongo database through MongoDB Compass .
 <br />
-`npm start` to start the server
+`npm start` to start the server .
+
+## Visitors 
+![visitors](https://visitor-badge.glitch.me/badge?page_id=Kushal1402.Learning-Backend&left_color=lightgreen&right_color=darkgreen&left_text=HelloVisitors)
 
 ## Author
 
