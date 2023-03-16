@@ -11,6 +11,5 @@ require('dotenv').config()
 const port = process.env.PORT || 5000
 
 console.log('Server started at : ' + port)
-// console.table([{ a: 1, b: 'Y', c: 3, d: 'W' }, { a: 'Z', b: 2, c: 'X', d: 4 }]);
 const server = http.createServer(app)
 server.listen(port)
