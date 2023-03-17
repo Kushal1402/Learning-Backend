@@ -12,3 +12,15 @@ exports.generateRandomString = (length, isNumber = false) => {
     }
     return result;
 };
+
+exports.getValidImageUrl = async (filename, name = 'SH') => {
+    if (!filename) {
+        filename =
+            'https://ui-avatars.com/api/?name=' +
+            name +
+            '&rounded=true&background=c39a56&color=fff'
+    } else {
+        filename = process.env.URL + filename
+    }
+    return filename
+} 

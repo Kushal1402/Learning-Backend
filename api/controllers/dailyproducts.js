@@ -1,7 +1,6 @@
 const DailyProductModel = require("../models/dailyproducts")
 const mongoose = require("mongoose");
 const niv = require("node-input-validator");
-const dailyproducts = require("../models/dailyproducts");
 
 exports.getDailyProducts = async (req, res) => {
 
@@ -29,6 +28,71 @@ exports.getDailyProducts = async (req, res) => {
     }
 }
 
+exports.getDailyProductsPaginate = async (req, res, next) => {
+    let { page, limit, search } = req.query
+    if (search === undefined) {
+        search = ''
+    }
+    if (page === '' || page === 0 || page === undefined) {
+        page = 1
+    }
+    if (limit === '' || limit === 0 || limit === undefined) {
+        limit = 10
+    }
+    var options = {
+        page: page,
+        limit: limit,
+    }
+    let matchObj = {}
+    matchObj.name = { $regex: search, $options: 'i' }
+    matchObj.flag = { $in: [1, 2] }
+    // matchObj.price = { $lte: 150 }
+    // matchObj.price = { $gt: 150 }
+    // matchObj.category = { $text : {$search : "\"Apple\""} }
+
+    try {
+
+        const platformAggregate = DailyProductModel.aggregate([
+            {
+                $match: matchObj,
+            },
+            // {
+            //     $match: { name: "Apple" }
+            // },
+            { $sort: { name: 1 } },
+            // {
+            //     $project: {
+            //         _id: 1,
+            //         name: 1,
+            //         brand: 1,
+            //         price: 1,
+            //         createdAt: 1
+            //     }
+            // }
+        ])
+
+        const result = await DailyProductModel.aggregatePaginate(
+            platformAggregate,
+            options
+        )
+
+        //   for (let i = 0; i < result.docs.length; i++) {
+        //     const element = result.docs[i]
+        //     element.image = await Helper.getValidImageUrl(element.image)
+        //   }
+
+        return res.status(200).send({
+            message: 'Products fetch successfully',
+            result: result,
+        })
+    } catch (err) {
+        return res.status(500).send({
+            message: 'Error occurred, Please try again later',
+            error: err.message,
+        })
+    }
+}
+
 exports.addDailyProducts = async (req, res) => {
 
     const {
@@ -38,17 +102,17 @@ exports.addDailyProducts = async (req, res) => {
         category
     } = req.body
 
-    // const validator = new niv.Validator(req.body, {
-    //     name: "required",
-    // });
-    // const matched = await validator.check();
+    const validator = new niv.Validator(req.body, {
+        name: "required",
+    });
+    const matched = await validator.check();
 
-    // if (!matched || matched === false) {
-    //     return res.status(422).send({
-    //         message: "Validation error",
-    //         errors: validator.errors,
-    //     });
-    // }
+    if (!matched || matched === false) {
+        return res.status(422).send({
+            message: "Validation error",
+            errors: validator.errors,
+        });
+    }
     try {
         const Productdata = await DailyProductModel.findOne({
             name: name,

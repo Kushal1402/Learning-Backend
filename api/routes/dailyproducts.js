@@ -4,6 +4,9 @@ const router = express.Router();
 
 // const Helper = require("../helper/helper");
 
+// import middlewares
+const adminCheckAuth = require('../middleware/admin-auth');
+
 const dailyProductsController = require("../controllers/dailyproducts");
 
 // const storage = multer.diskStorage({
@@ -39,14 +42,15 @@ const dailyProductsController = require("../controllers/dailyproducts");
 //     fileFilter: fileFilter,
 // });
 
-router.get("/get", dailyProductsController.getDailyProducts);
+router.get("/get", adminCheckAuth, dailyProductsController.getDailyProducts);
+router.get("/get/paginate", adminCheckAuth, dailyProductsController.getDailyProductsPaginate);
 
-router.post("/add", dailyProductsController.addDailyProducts);
+router.post("/add", adminCheckAuth, dailyProductsController.addDailyProducts);
 
-router.put("/update/:id", dailyProductsController.editDailyProducts);
+router.put("/update/:id", adminCheckAuth, dailyProductsController.editDailyProducts);
 
-router.delete("/del/:_id", dailyProductsController.deleleDailyProducts);
+router.delete("/del/:_id", adminCheckAuth, dailyProductsController.deleleDailyProducts);
 
-router.put("/change_status/:id", dailyProductsController.change_status);
+router.put("/change_status/:id", adminCheckAuth, dailyProductsController.change_status);
 
 module.exports = router;

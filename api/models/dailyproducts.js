@@ -1,5 +1,8 @@
 const mongoose = require("mongoose");
 
+let aggregatePaginate = require('mongoose-aggregate-paginate-v2');
+let mongoosePaginate = require('mongoose-paginate-v2');
+
 const productsSchema = new mongoose.Schema(
     {
         name: {
@@ -21,7 +24,14 @@ const productsSchema = new mongoose.Schema(
             type: Number,
             default: 1, //1=activated 2=deactivated 3=delete
         },
+    },
+    {
+        timestamps: true,
     }
 );
+
+productsSchema.plugin(aggregatePaginate);
+productsSchema.plugin(mongoosePaginate);
+
 // mongoose.model("Collection name", schema name)
 module.exports = mongoose.model("products", productsSchema)

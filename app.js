@@ -27,6 +27,7 @@ app.use(express.urlencoded({ extended: true }));
 const Routing = require("./api/routes/routing");
 const restaurantRoutes = require("./api/routes/restaurant");
 const productRoutes = require("./api/routes/dailyproducts");
+const adminRoutes = require("./api/routes/admin");
 
 app.use((req, res, next) => {
     res.header("Access-Control-Allow-Origin", "*");
@@ -42,5 +43,6 @@ app.use((req, res, next) => {
 app.use("/api", Routing);
 app.use("/api/restaurant", restaurantRoutes);
 app.use("/api/products", productRoutes);
+app.use("/api/admin", adminRoutes);
 
 module.exports = app;
