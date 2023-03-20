@@ -9,12 +9,24 @@ const productsSchema = new mongoose.Schema(
             type: String,
             required: true
         },
+        // brand: {
+        //     type: [String],
+        //     default: ""
+        // },
         brand: {
             type: String,
             default: ""
         },
+        restroId: {
+            type: mongoose.Schema.Types.ObjectId,
+            default: ""
+        },
         price: {
             type: Number,
+        },
+        cover_photo: {
+            type: String,
+            default: ""
         },
         category: {
             type: String,

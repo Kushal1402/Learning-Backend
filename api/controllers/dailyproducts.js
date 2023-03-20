@@ -53,13 +53,57 @@ exports.getDailyProductsPaginate = async (req, res, next) => {
     try {
 
         const platformAggregate = DailyProductModel.aggregate([
-            {
-                $match: matchObj,
-            },
+            // {
+            //     $match: matchObj,
+            // },
+            // { $sort: { name: 1 } },    
+                    
             // {
             //     $match: { name: "Apple" }
+            // },            
+
+            // {
+            //     $group : {_id: '$brand', total: {$sum: '$price' }}
             // },
-            { $sort: { name: 1 } },
+            // { $sort: { total: 1 } },
+
+            // {
+            //     $unwind : {path : "$brand", preserveNullAndEmptyArrays : true}
+            //     // $unwind : "$brand"
+            // },
+
+            // {
+            //     $unwind: { path: "$category", preserveNullAndEmptyArrays: true }
+            //     // $unwind : "$brand"
+            // },
+            // {
+            //     $group: { _id: '$category', total: { $sum: '$price' } }
+            // },
+
+            {
+                $lookup : {
+                    from: 'restaurants',
+                    as : 'RestaurantData',
+                    let : {restroId : '$restroId'},
+                    pipeline : [
+                        {
+                            $match: {
+                              $expr: {
+                                $and: [
+                                  { $eq: ["$_id", "$$restroId"] },
+                                  {
+                                    $eq: ["$flag", 1],
+                                  },
+                                ],
+                              },
+                            },
+                          },
+                    ]
+                }
+            },
+            { $unwind: { path: "$RestaurantData", preserveNullAndEmptyArrays: true } },
+
+
             // {
             //     $project: {
             //         _id: 1,
@@ -134,6 +178,7 @@ exports.addDailyProducts = async (req, res) => {
         createObj.brand = brand;
         createObj.price = price;
         createObj.category = category;
+        createObj.cover_photo = req.file.path;
 
         const result = new DailyProductModel(createObj);
 
@@ -161,15 +206,16 @@ exports.editDailyProducts = async (req, res) => {
         name,
         brand,
         price,
-        category
+        category,
+        cover_photo
     } = req.body
 
     if (name) {
         const Productdata = await DailyProductModel.findOne({
-            // _id: mongoose.Types.ObjectId(id),
+            _id: new mongoose.Types.ObjectId(id),
             name: name,
         });
-        console.log(Productdata, Productdata)
+        // console.log(Productdata, "Productdata")
         if (Productdata) {
             return res.status(422).json({
                 message: "Product name already exist",
@@ -190,6 +236,7 @@ exports.editDailyProducts = async (req, res) => {
         if (brand) updateObj.brand = brand;
         if (price) updateObj.price = price;
         if (category) updateObj.category = category;
+        if (cover_photo) updateObj.cover_photo = req.file.path;
 
         const result = await DailyProductModel.findByIdAndUpdate(
             id,
@@ -237,7 +284,7 @@ exports.deleleDailyProducts = async (req, res) => {
 
 exports.change_status = async (req, res) => {
     const id = req.params.id;
-    console.log(id, "id");
+    // console.log(id, "id");
 
     const Validator = new niv.Validator(req.body, {
         flag: "required|in:1,2",
@@ -250,6 +297,18 @@ exports.change_status = async (req, res) => {
         });
     }
 
+    if (id) {
+        const Productdata = await DailyProductModel.findOne({
+            _id: new mongoose.Types.ObjectId(id),
+        });
+        // console.log(Productdata, "Productdata exist or not")
+        if (!Productdata || Productdata === null) {
+            return res.status(422).json({
+                message: "There is no product with this id",
+            });
+        }
+    }
+
     const flag = Number(req.body.flag);
 
     let updateObj = {};
@@ -258,8 +317,8 @@ exports.change_status = async (req, res) => {
 
     try {
         let message;
-        if (flag == 1) message = "Restaurant has been successfully enabled";
-        if (flag == 2) message = "Restaurant has been successfully disabled";
+        if (flag == 1) message = "Product has been successfully enabled";
+        if (flag == 2) message = "Product has been successfully disabled";
 
         const result = await DailyProductModel.findByIdAndUpdate(
             id,

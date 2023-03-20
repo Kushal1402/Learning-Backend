@@ -11,7 +11,6 @@ const restaurantSchema = new mongoose.Schema(
         address: {
             type: String,
             required: true,
-            default: ""
         },
         phone_number: {
             type: String,
@@ -34,5 +33,5 @@ const restaurantSchema = new mongoose.Schema(
 restaurantSchema.plugin(aggregatePaginate);
 restaurantSchema.plugin(mongoosePaginate);
 
-restaurantSchema.index({ location: "2dsphere" });
+// restaurantSchema.index({ location: "2dsphere" });
 module.exports = mongoose.model("Restaurant", restaurantSchema);

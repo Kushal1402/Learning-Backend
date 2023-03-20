@@ -4,6 +4,9 @@ node_modules
 # production
 /build
 
+# uploads
+uploads
+
 .env.local
 .env.development.local
 .env.test.local
