@@ -29,7 +29,7 @@ This repository is made just for learning backend coding in ***Node JS***, ***Ex
 ## 🤝 Contributing
 
 Contributions, issues and feature requests are welcome!
-Feel free to check the [issues page](https://github.com/Kushal1402/Contact-Manager/issues).
+Feel free to check the [issues page](https://github.com/Kushal1402/Learning-Backend/issues).
 
 ## Show your support
 
