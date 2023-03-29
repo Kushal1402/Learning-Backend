@@ -53,4 +53,6 @@ router.delete("/del/:_id", adminCheckAuth, dailyProductsController.deleleDailyPr
 
 router.put("/change_status/:id", adminCheckAuth, dailyProductsController.change_status);
 
+router.get("/get/detail/:id", adminCheckAuth, dailyProductsController.getDetailDailyProduct);
+
 module.exports = router;

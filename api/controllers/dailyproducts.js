@@ -1,6 +1,7 @@
 const DailyProductModel = require("../models/dailyproducts")
 const mongoose = require("mongoose");
 const niv = require("node-input-validator");
+const Helper = require("../helper/helper")
 
 exports.getDailyProducts = async (req, res) => {
 
@@ -57,7 +58,7 @@ exports.getDailyProductsPaginate = async (req, res, next) => {
             //     $match: matchObj,
             // },
             // { $sort: { name: 1 } },    
-                    
+
             // {
             //     $match: { name: "Apple" }
             // },            
@@ -81,38 +82,41 @@ exports.getDailyProductsPaginate = async (req, res, next) => {
             // },
 
             {
-                $lookup : {
+                $lookup: {
                     from: 'restaurants',
-                    as : 'RestaurantData',
-                    let : {restroId : '$restroId'},
-                    pipeline : [
+                    as: 'RestaurantData',
+                    let: { restroId: '$restroId' },
+                    pipeline: [
                         {
                             $match: {
-                              $expr: {
-                                $and: [
-                                  { $eq: ["$_id", "$$restroId"] },
-                                  {
-                                    $eq: ["$flag", 1],
-                                  },
-                                ],
-                              },
+                                $expr: {
+                                    $and: [
+                                        { $eq: ["$_id", "$$restroId"] },
+                                        {
+                                            $eq: ["$flag", 1],
+                                        },
+                                    ],
+                                },
                             },
-                          },
+                        },
                     ]
                 }
             },
             { $unwind: { path: "$RestaurantData", preserveNullAndEmptyArrays: true } },
 
-
-            // {
-            //     $project: {
-            //         _id: 1,
-            //         name: 1,
-            //         brand: 1,
-            //         price: 1,
-            //         createdAt: 1
-            //     }
-            // }
+            {
+                $project: {
+                    _id: 1,
+                    name: 1,
+                    brand: 1,
+                    price: 1,
+                    category: 1,
+                    cover_photo: 1,
+                    flag: 1,
+                    RestaurantData: 1,
+                    createdAt: 1
+                }
+            }
         ])
 
         const result = await DailyProductModel.aggregatePaginate(
@@ -120,10 +124,16 @@ exports.getDailyProductsPaginate = async (req, res, next) => {
             options
         )
 
-        //   for (let i = 0; i < result.docs.length; i++) {
-        //     const element = result.docs[i]
-        //     element.image = await Helper.getValidImageUrl(element.image)
-        //   }
+        // appending the live image url
+        for (let i = 0; i < result.docs.length; i++) {
+            const element = result.docs[i];
+            if (element?.cover_photo) {
+                element.cover_photo = await Helper.getValidImageUrl(element.cover_photo)
+            }
+            if (element?.RestaurantData?.cover_photo) {
+                element.RestaurantData.cover_photo = await Helper.getValidImageUrl(element.RestaurantData.cover_photo)
+            }
+        };
 
         return res.status(200).send({
             message: 'Products fetch successfully',
@@ -340,5 +350,114 @@ exports.change_status = async (req, res) => {
             message: "Error occurred, Please try again later",
             error: error.message,
         });
+    }
+}
+
+exports.getDetailDailyProduct = async (req, res) => {
+    const id = req.params.id;
+    // console.log(id, "id")
+
+    let matchObj = {}
+    matchObj._id = new mongoose.Types.ObjectId(id);
+    matchObj.flag = { $in: [1, 2] }
+
+    try {
+        // The very basic way :
+        // let result = await DailyProductModel.findOne(matchObj)
+
+        // The basic lookup method
+        // let result = await DailyProductModel.aggregate([
+        //     {
+        //         $match: matchObj,
+        //     },
+        //     {
+        //         $lookup: {
+        //             from: 'restaurants',
+        //             as: 'RestaurantData',
+        //             localField: "restroId",
+        //             foreignField: "_id"
+        //         }
+        //     },
+        //     { $unwind: { path: "$RestaurantData", preserveNullAndEmptyArrays: true } },
+        //     {
+        //         $project: {
+        //             name: 1,
+        //             brand: 1,
+        //             price: 1,
+        //             cover_photo: 1,
+        //             category: 1,
+        //             RestaurantData: 1
+        //         }
+        //     }
+        // ])
+
+        // The pipeline method in lookup
+        let result = await DailyProductModel.aggregate([
+            {
+                $match: matchObj,
+            },
+            {
+                $lookup: {
+                    from: 'restaurants',
+                    as: 'RestaurantData',
+                    let: { restroId: '$restroId' },
+                    pipeline: [
+                        {
+                            $match: {
+                                $expr: {
+                                    $and: [
+                                        { $eq: ["$_id", "$$restroId"] },
+                                        {
+                                            $eq: ["$flag", 1],
+                                        },
+                                    ],
+                                }
+                            }
+                        },
+                        {
+                            $project: {
+                                en_name: 1,
+                                address: 1,
+                                phone_number: 1,
+                                cover_photo: 1,
+                                flag: 1
+                            }
+                        }
+                    ]
+                }
+            },
+            { $unwind: { path: "$RestaurantData", preserveNullAndEmptyArrays: true } },
+            {
+                $project: {
+                    name: 1,
+                    brand: 1,
+                    price: 1,
+                    cover_photo: 1,
+                    category: 1,
+                    RestaurantData: 1
+                }
+            }
+        ])
+
+        for (let i = 0; i < result.length; i++) {
+            const element = result[i];
+            if (element.cover_photo) {
+                element.cover_photo = await Helper.getValidImageUrl(element.cover_photo);
+            }
+            if (element.RestaurantData?.cover_photo) {
+                element.RestaurantData.cover_photo = await Helper.getValidImageUrl(
+                    element.RestaurantData.cover_photo
+                );
+            }
+        }
+
+        return res.status(200).json({
+            message: "Product Detail has been retrieved ",
+            result: result
+        });
+    } catch (error) {
+        return res.status(400).json({
+            message: `Error occured due to ${error.message}`
+        })
     }
 }
