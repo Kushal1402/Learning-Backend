@@ -20,6 +20,10 @@ const restaurantSchema = new mongoose.Schema(
             type: String,
             default: "",
         },
+        photos: {
+            type: [String],
+            default: []
+        },
         flag: {
             type: Number,
             default: 1, //1=activated 2=deactivated 3=delete

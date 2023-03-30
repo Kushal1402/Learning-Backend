@@ -133,6 +133,11 @@ exports.getDailyProductsPaginate = async (req, res, next) => {
             if (element?.RestaurantData?.cover_photo) {
                 element.RestaurantData.cover_photo = await Helper.getValidImageUrl(element.RestaurantData.cover_photo)
             }
+            if (element?.RestaurantData?.photos) {
+                for (let j = 0; j < element.RestaurantData.photos.length; j++) {
+                    element.RestaurantData.photos[j] = await Helper.getValidImageUrl(element.RestaurantData.photos[j])
+                }
+            }
         };
 
         return res.status(200).send({
@@ -153,7 +158,8 @@ exports.addDailyProducts = async (req, res) => {
         name,
         brand,
         price,
-        category
+        category,
+        restroId
     } = req.body
 
     const validator = new niv.Validator(req.body, {
@@ -185,9 +191,14 @@ exports.addDailyProducts = async (req, res) => {
         // }
 
         createObj.name = name;
-        createObj.brand = brand;
+        // For single
+        // createObj.brand = brand;
+
+        // For multiple
+        createObj.brand = brand.split(",").map((val) => val.trim());
         createObj.price = price;
         createObj.category = category;
+        createObj.restroId = restroId;
         createObj.cover_photo = req.file.path;
 
         const result = new DailyProductModel(createObj);
@@ -217,7 +228,8 @@ exports.editDailyProducts = async (req, res) => {
         brand,
         price,
         category,
-        cover_photo
+        cover_photo,
+        restroId
     } = req.body
 
     if (name) {
@@ -246,7 +258,8 @@ exports.editDailyProducts = async (req, res) => {
         if (brand) updateObj.brand = brand;
         if (price) updateObj.price = price;
         if (category) updateObj.category = category;
-        if (cover_photo) updateObj.cover_photo = req.file.path;
+        if (restroId) updateObj.restroId = restroId;
+        if (req.file.path) updateObj.cover_photo = req.file.path;
 
         const result = await DailyProductModel.findByIdAndUpdate(
             id,
@@ -418,6 +431,7 @@ exports.getDetailDailyProduct = async (req, res) => {
                             $project: {
                                 en_name: 1,
                                 address: 1,
+                                photos: 1,
                                 phone_number: 1,
                                 cover_photo: 1,
                                 flag: 1
@@ -439,21 +453,26 @@ exports.getDetailDailyProduct = async (req, res) => {
             }
         ])
 
-        for (let i = 0; i < result.length; i++) {
-            const element = result[i];
-            if (element.cover_photo) {
-                element.cover_photo = await Helper.getValidImageUrl(element.cover_photo);
-            }
-            if (element.RestaurantData?.cover_photo) {
-                element.RestaurantData.cover_photo = await Helper.getValidImageUrl(
-                    element.RestaurantData.cover_photo
-                );
+        // for (let i = 0; i < result.length; i++) {
+        const element = result[0];
+        if (element.cover_photo) {
+            element.cover_photo = await Helper.getValidImageUrl(element.cover_photo);
+        }
+        if (element.RestaurantData?.cover_photo) {
+            element.RestaurantData.cover_photo = await Helper.getValidImageUrl(
+                element.RestaurantData.cover_photo
+            );
+        }
+        if (element?.RestaurantData?.photos) {
+            for (let j = 0; j < element.RestaurantData.photos.length; j++) {
+                element.RestaurantData.photos[j] = await Helper.getValidImageUrl(element.RestaurantData.photos[j])
             }
         }
+        // }
 
         return res.status(200).json({
             message: "Product Detail has been retrieved ",
-            result: result
+            result: result[0]
         });
     } catch (error) {
         return res.status(400).json({

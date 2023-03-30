@@ -9,14 +9,14 @@ const productsSchema = new mongoose.Schema(
             type: String,
             required: true
         },
+        brand: {
+            type: [String],
+            default: []
+        },
         // brand: {
-        //     type: [String],
+        //     type: String,
         //     default: ""
         // },
-        brand: {
-            type: String,
-            default: ""
-        },
         restroId: {
             type: mongoose.Schema.Types.ObjectId,
             default: ""
