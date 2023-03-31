@@ -19,9 +19,13 @@ app.use(morgan("dev"));  // used to log which api-request recently called .
 // Returns middleware that only parses urlencoded bodies and only looks at requests where the Content-Type header matches the type option. This parser accepts only UTF-8 encoding of the body. 
 // app.use(bodyParser.urlencoded({ extended: true }));
 
-// use this instead of body-parser package as middleware
+// use this instead of body-parser package as middleware Body parser, reading data from body into req.body
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Serving static files
+app.use("/uploads", express.static("uploads"));
+// app.use(express.static(path.join(__dirname, 'public')));
 
 // route
 const Routing = require("./api/routes/routing");

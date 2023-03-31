@@ -3,6 +3,8 @@ const mongoose = require("mongoose");
 const niv = require("node-input-validator");
 const Helper = require("../helper/helper")
 
+const readXlsxFile = require('read-excel-file/node')
+
 exports.getDailyProducts = async (req, res) => {
 
     let productData = await DailyProductModel.find();
@@ -54,9 +56,9 @@ exports.getDailyProductsPaginate = async (req, res, next) => {
     try {
 
         const platformAggregate = DailyProductModel.aggregate([
-            // {
-            //     $match: matchObj,
-            // },
+            {
+                $match: matchObj,
+            },
             // { $sort: { name: 1 } },    
 
             // {
@@ -127,8 +129,9 @@ exports.getDailyProductsPaginate = async (req, res, next) => {
         // appending the live image url
         for (let i = 0; i < result.docs.length; i++) {
             const element = result.docs[i];
+            console.log(element?.cover_photo)
             if (element?.cover_photo) {
-                element.cover_photo = await Helper.getValidImageUrl(element.cover_photo)
+                element.cover_photo = await Helper.getValidImageUrl(element.cover_photo, element.name)
             }
             if (element?.RestaurantData?.cover_photo) {
                 element.RestaurantData.cover_photo = await Helper.getValidImageUrl(element.RestaurantData.cover_photo)
@@ -221,7 +224,7 @@ exports.addDailyProducts = async (req, res) => {
 exports.editDailyProducts = async (req, res) => {
 
     const id = req.params.id;
-    // console.log(id, "id")
+    // console.log(req.body, "req.body")
 
     const {
         name,
@@ -255,11 +258,17 @@ exports.editDailyProducts = async (req, res) => {
         // }
 
         if (name) updateObj.name = name;
-        if (brand) updateObj.brand = brand;
+
+        // For single
+        // if (brand) updateObj.brand = brand;
+
+        // For multiple
+        if (brand) updateObj.brand = brand.split(",").map((val) => val.trim());
+
         if (price) updateObj.price = price;
         if (category) updateObj.category = category;
         if (restroId) updateObj.restroId = restroId;
-        if (req.file.path) updateObj.cover_photo = req.file.path;
+        if (req.file) updateObj.cover_photo = req.file.path;
 
         const result = await DailyProductModel.findByIdAndUpdate(
             id,
@@ -282,6 +291,7 @@ exports.editDailyProducts = async (req, res) => {
     }
 }
 
+// Delete From Database
 exports.deleleDailyProducts = async (req, res) => {
     const id = req.params;
     // console.log(id, "id")
@@ -303,6 +313,58 @@ exports.deleleDailyProducts = async (req, res) => {
         });
     }
 
+}
+
+// Only Flag===3 as Delete API
+exports.deleteFlagProduct = async (req, res) => {
+    const id = req.params.id;
+    console.log(id, "id");
+    console.log(req.body, "req.body");
+
+    const flag = req.body.flag;
+
+    const validator = new niv.Validator(req.body, {
+        flag: "required|in:3"
+    })
+    const matched = await validator.check();
+    console.log(matched, "matched")
+
+    if (!matched) {
+        return res.status(422).send({
+            message: "Validation error",
+            errors: validator.errors,
+        });
+    };
+
+    let updateObj = {
+        flag: flag
+    };
+
+    try {
+        let message;
+
+        if (flag === 3) message = "Product has been successfully deleted";
+
+        const element = await DailyProductModel.findByIdAndUpdate(
+            id,
+            {
+                $set: updateObj
+            },
+            {
+                new: true
+            }
+        );
+
+        return res.status(200).send({
+            message: message
+        });
+
+    } catch (error) {
+        return res.status(500).json({
+            message: "Error occurred, Please try again later",
+            error: error.message,
+        });
+    }
 }
 
 exports.change_status = async (req, res) => {
@@ -478,5 +540,84 @@ exports.getDetailDailyProduct = async (req, res) => {
         return res.status(400).json({
             message: `Error occured due to ${error.message}`
         })
+    }
+}
+
+exports.addXlxsData = async (req, res) => {
+    try {
+        // console.log(req.file, "file obj")
+        let newArray = [];
+
+        const dataRows = await readXlsxFile(req.file.path);
+
+        // This line is used to skip the header line
+        dataRows.shift();
+
+        // const validator = new niv.Validator(row[0], {
+        //     name: "required"
+        // })
+        // const matched = await validator.check();
+        // if(!matched || matched === false) {
+        //     return res.status(422).send({
+        //         message: "Validation error",
+        //         errors: validator.errors,
+        //     });
+        // }
+
+        await dataRows.map(async (row) => {
+            const validator = new niv.Validator(row[0], {
+                name: "required"
+            })
+            const matched = await validator.check();
+            if (!matched || matched === false) {
+                return res.status(422).send({
+                    message: "Validation error",
+                    errors: validator.errors,
+                });
+            }
+        })
+
+        await dataRows.map(async (row) => {
+            const productName = await DailyProductModel.findOne({
+                name: row[0]
+            })
+            console.log(productName, 'productName')
+            // if (productName) {
+            //     return res.status(422).json({
+            //         message: "Product name already exist",
+            //     });
+            // }
+        })
+
+        await dataRows.map(async (row) => {
+            const newState = {
+                name: row[0],
+                brand: row[1].split(",").map((val) => val.trim()),
+                restroId: row[2].toString(),
+                price: row[3],
+                cover_photo: `uploads/category/${row[4]}`,
+                category: row[5],
+            };
+            newArray.push(newState);
+        })
+
+        // console.log(newArray, "newArray")
+
+        // For single upload
+        // const result = new DailyProductModel(newArray[0]);
+        // await result.save();
+
+        // For multiple upload
+        await DailyProductModel.insertMany(newArray);
+        // console.log(result, "result");
+
+        return res.status(201).json({
+            message: "Product is successfully added",
+            // result: result,
+        });
+    } catch (error) {
+        return res.status(500).send({
+            message: "Could not read the file: " + error,
+        });
     }
 }

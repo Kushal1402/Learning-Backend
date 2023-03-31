@@ -1,4 +1,4 @@
-exports.generateRandomString = (length, isNumber = false) => {
+exports.generateRandomString = async (length, isNumber = false) => {
     var result = "";
     if (isNumber) {
         var characters = "0123456789";
@@ -23,4 +23,4 @@ exports.getValidImageUrl = async (filename, name = 'SH') => {
         filename = process.env.URL + filename
     }
     return filename
-} 
+}
