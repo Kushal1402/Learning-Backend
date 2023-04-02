@@ -263,11 +263,11 @@ exports.getAdminDetail = async (req, res) => {
             },
             {
                 $project: {
-                  name: 1,
-                  email: 1,
-                  flag: 1,
-                  profile_pic: 1,
-                  createdAt: 1,
+                    name: 1,
+                    email: 1,
+                    flag: 1,
+                    profile_pic: 1,
+                    createdAt: 1,
                 },
             }
         ]);
@@ -275,23 +275,23 @@ exports.getAdminDetail = async (req, res) => {
         // result = result[0];
         if (!result) {
             return res.status(500).send({
-              message: "Admin doesn't exist",
+                message: "Admin doesn't exist",
             });
-          }
+        }
 
         result.profile_pic = await Helper.getValidImageUrl(
-          result.profile_pic,
-          result.username
+            result.profile_pic,
+            result.username
         );
 
         return res.status(200).json({
-            message:"Admin detail fetch successfully",
+            message: "Admin detail fetch successfully",
             result: result
         })
     } catch (error) {
         return res.status(500).json({
             message: "Error occurred, Please try again later",
             error: error.message,
-          });
+        });
     }
 }

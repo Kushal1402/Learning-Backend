@@ -553,41 +553,30 @@ exports.addXlxsData = async (req, res) => {
         // This line is used to skip the header line
         dataRows.shift();
 
-        // const validator = new niv.Validator(row[0], {
-        //     name: "required"
+        // await dataRows.map(async (row) => {
+        //     const validator = new niv.Validator(row[0], {
+        //         name: "required"
+        //     })
+        //     const matched = await validator.check();
+        //     if (!matched || matched === false) {
+        //         return res.status(422).send({
+        //             message: "Validation error",
+        //             errors: validator.errors,
+        //         });
+        //     }
         // })
-        // const matched = await validator.check();
-        // if(!matched || matched === false) {
-        //     return res.status(422).send({
-        //         message: "Validation error",
-        //         errors: validator.errors,
-        //     });
-        // }
 
-        await dataRows.map(async (row) => {
-            const validator = new niv.Validator(row[0], {
-                name: "required"
-            })
-            const matched = await validator.check();
-            if (!matched || matched === false) {
-                return res.status(422).send({
-                    message: "Validation error",
-                    errors: validator.errors,
-                });
-            }
-        })
-
-        await dataRows.map(async (row) => {
-            const productName = await DailyProductModel.findOne({
-                name: row[0]
-            })
-            console.log(productName, 'productName')
-            // if (productName) {
-            //     return res.status(422).json({
-            //         message: "Product name already exist",
-            //     });
-            // }
-        })
+        // await dataRows.map(async (row) => {
+        //     const productName = await DailyProductModel.findOne({
+        //         name: row[0]
+        //     })
+        //     console.log(productName, 'productName')
+        //     if (productName) {
+        //         return res.status(422).json({
+        //             message: "Product name already exist",
+        //         });
+        //     }
+        // })
 
         await dataRows.map(async (row) => {
             const newState = {
