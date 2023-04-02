@@ -9,6 +9,11 @@ This repository is made just for learning backend coding in ***Node JS***, ***Ex
 - Mongo DB
 - Mongoose
 
+## Changes to be done in .env
+`MONGO_URL` Change present URL to your Mongo **URL** .
+<br />
+`JWT_KEY` Change the value of this variable .
+
 ## Instruction to run in local
 
 `npm i` or `npm install` to install the required dependencies .
@@ -16,6 +21,8 @@ This repository is made just for learning backend coding in ***Node JS***, ***Ex
 `connect` to the mongo database through MongoDB Compass .
 <br />
 `npm start` to start the server .
+
+ 
 
 ## Visitors 
 ![visitors](https://visitor-badge.glitch.me/badge?page_id=Kushal1402.Learning-Backend&left_color=lightgreen&right_color=darkgreen&left_text=HelloVisitors)
