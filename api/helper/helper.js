@@ -24,3 +24,35 @@ exports.getValidImageUrl = async (filename, name = 'SH') => {
     }
     return filename
 }
+
+exports.getValidPdfUrl = async (filename) => {
+    if (filename === "" || filename === undefined || filename === null) {
+        filename = "";
+    } else {
+        filename = process.env.URL + filename;
+    }
+    return filename;
+}
+
+exports.writeErrorLog = async (req, error) => {
+    console.log(req, 'req parameters');
+
+    const requestURL = req.protocol + "://" + req.get("host") + req.originalUrl;
+    const requestBody = JSON.stringify(req.body);
+    const date = moment().format("MMMM Do YYYY, h:mm:ss a");
+    fs.appendFileSync(
+        "errorLog.log",
+        "REQUEST DATE : " +
+        date +
+        "\n" +
+        "API URL : " +
+        requestURL +
+        "\n" +
+        "API PARAMETER : " +
+        requestBody +
+        "\n" +
+        "Error : " +
+        error +
+        "\n\n"
+    );
+}

@@ -16,12 +16,14 @@ exports.signUp = async (req, res) => {
         name,
         email,
         password,
+        role
     } = req.body
 
     const objValidation = new niv.Validator(req.body, {
-        name: 'required',
-        email: 'required',
-        password: 'required'
+        name: 'required|maxLength:10',
+        email: 'required|email',
+        password: 'required',
+        role: 'required'
     });
     const matched = await objValidation.check();
     if (!matched || matched === false) {
@@ -39,14 +41,14 @@ exports.signUp = async (req, res) => {
     }
 
     const hash = await bcrypt.hash(password, 10);
-    console.log(hash, "hash password")
 
     try {
 
         let createAdminObj = {
             name: name,
             email: email,
-            password: hash
+            password: hash,
+            role: role
         }
 
         const newAdmin = new AdminModel(createAdminObj);
@@ -111,7 +113,6 @@ exports.login = async (req, res) => {
                 expiresIn: '1d'
             }
         )
-        console.log(token, "token")
 
         return res.status(200).json({
             admin: adminData,
@@ -130,7 +131,6 @@ exports.login = async (req, res) => {
 exports.auth = async (req, res) => {
     try {
         const admin = req.adminData;
-        // console.log(admin, "admin")
 
         admin.profile_pic = await Helper.getValidImageUrl(
             admin.profile_pic,
@@ -169,7 +169,6 @@ exports.auth = async (req, res) => {
 // Update api
 exports.upate_profile = async (req, res) => {
     const id = req.params.id;
-    console.log(id, "id");
 
     let updateObj = {};
 
@@ -251,7 +250,6 @@ exports.change_password = async (req, res) => {
 
 exports.getAdminDetail = async (req, res) => {
     let id = req.params.id;
-    console.log(id, "id");
 
     try {
         let result = await AdminModel.aggregate([

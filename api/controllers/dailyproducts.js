@@ -1,8 +1,9 @@
 const DailyProductModel = require("../models/dailyproducts")
+const RestroModel = require("../models/restaurant");
 const mongoose = require("mongoose");
 const niv = require("node-input-validator");
 const Helper = require("../helper/helper")
-
+const sendEmail = require('../helper/sendEmail')
 const readXlsxFile = require('read-excel-file/node')
 
 exports.getDailyProducts = async (req, res) => {
@@ -32,15 +33,24 @@ exports.getDailyProducts = async (req, res) => {
 }
 
 exports.getDailyProductsPaginate = async (req, res, next) => {
-    let { page, limit, search } = req.query
+    let { page, limit, search, min, max, category, equal_value } = req.query
     if (search === undefined) {
         search = ''
+    }
+    if (category === undefined || category === '') {
+        category = ''
     }
     if (page === '' || page === 0 || page === undefined) {
         page = 1
     }
     if (limit === '' || limit === 0 || limit === undefined) {
         limit = 10
+    }
+    if (min === '' || min === 0 || min === undefined) {
+        min = 0
+    }
+    if (max === '' || max === 0 || max === undefined) {
+        max = 100000
     }
     var options = {
         page: page,
@@ -49,63 +59,107 @@ exports.getDailyProductsPaginate = async (req, res, next) => {
     let matchObj = {}
     matchObj.name = { $regex: search, $options: 'i' }
     matchObj.flag = { $in: [1, 2] }
+    matchObj.price = { $lt: Number(max), $gt: Number(min) }
+    matchObj.category = { $regex: category, $options: 'i' }
+    /* 
+        options i => Case insensitivity to match upper and lower cases,
+                  => (?i) begins a case-insensitive match, (?-i) ends a case-insensitive match
+        options m => For patterns that include anchors (i.e. ^ for the start, $ for the end), match at the beginning or end of each line for strings with multiline
+        options x => Extended capability to ignore all white space characters in the $regex
+        options s => Allows the dot character (i.e. *.*) to match all characters including newline characters
+    */
+    // matchObj.price = { $eq: equal_value}
     // matchObj.price = { $lte: 150 }
     // matchObj.price = { $gt: 150 }
     // matchObj.category = { $text : {$search : "\"Apple\""} }
 
     try {
 
-        const platformAggregate = DailyProductModel.aggregate([
+        /* Learning Aggregate */
+        // const productAggregate = DailyProductModel.aggregate([
+        //     {
+        //         $match: matchObj,
+        //     },
+        //     // { $sort: { name: 1 } },    
+
+        //     // {
+        //     //     $match: { name: "Apple" }
+        //     // },            
+
+        //     // {
+        //     //     $group : {_id: '$brand', total: {$sum: '$price' }}
+        //     // },
+        //     // { $sort: { total: 1 } },
+
+        //     // {
+        //     //     $unwind : {path : "$brand", preserveNullAndEmptyArrays : true}
+        //     //     // $unwind : "$brand"
+        //     // },
+
+        //     // {
+        //     //     $unwind: { path: "$category", preserveNullAndEmptyArrays: true }
+        //     //     // $unwind : "$brand"
+        //     // },
+        //     // {
+        //     //     $group: { _id: '$category', total: { $sum: '$price' } }
+        //     // },
+
+        //     {
+        //         $lookup: {
+        //             from: 'restaurants',
+        //             as: 'RestaurantData',
+        //             let: { restroId: '$restroId' },
+        //             pipeline: [
+        //                 {
+        //                     $match: {
+        //                         $expr: {
+        //                             $and: [
+        //                                 { $eq: ["$_id", "$$restroId"] },
+        //                                 {
+        //                                     $eq: ["$flag", 1],
+        //                                 },
+        //                             ],
+        //                         },
+        //                     },
+        //                 },
+        //             ]
+        //         }
+        //     },
+        //     { $unwind: { path: "$RestaurantData", preserveNullAndEmptyArrays: true } },
+
+        //     {
+        //         $project: {
+        //             _id: 1,
+        //             name: 1,
+        //             brand: 1,
+        //             price: 1,
+        //             category: 1,
+        //             cover_photo: 1,
+        //             flag: 1,
+        //             // RestaurantData: 1,
+        //             RestaurantData: {
+        //                 en_name: 1, address: 1, phone_number: 1, cover_photo: 1, photos: 1,
+        //                 flag: 1
+        //             },
+        //             createdAt: 1
+        //         }
+        //     }
+        // ])
+
+        /* Aggregation using ForeignField, LocalField */
+        const productAggregate = DailyProductModel.aggregate([
             {
                 $match: matchObj,
             },
-            // { $sort: { name: 1 } },    
-
-            // {
-            //     $match: { name: "Apple" }
-            // },            
-
-            // {
-            //     $group : {_id: '$brand', total: {$sum: '$price' }}
-            // },
-            // { $sort: { total: 1 } },
-
-            // {
-            //     $unwind : {path : "$brand", preserveNullAndEmptyArrays : true}
-            //     // $unwind : "$brand"
-            // },
-
-            // {
-            //     $unwind: { path: "$category", preserveNullAndEmptyArrays: true }
-            //     // $unwind : "$brand"
-            // },
-            // {
-            //     $group: { _id: '$category', total: { $sum: '$price' } }
-            // },
-
             {
                 $lookup: {
                     from: 'restaurants',
                     as: 'RestaurantData',
-                    let: { restroId: '$restroId' },
-                    pipeline: [
-                        {
-                            $match: {
-                                $expr: {
-                                    $and: [
-                                        { $eq: ["$_id", "$$restroId"] },
-                                        {
-                                            $eq: ["$flag", 1],
-                                        },
-                                    ],
-                                },
-                            },
-                        },
-                    ]
+                    localField: 'restroId',
+                    foreignField: '_id'
                 }
             },
             { $unwind: { path: "$RestaurantData", preserveNullAndEmptyArrays: true } },
-
             {
                 $project: {
                     _id: 1,
@@ -115,21 +169,68 @@ exports.getDailyProductsPaginate = async (req, res, next) => {
                     category: 1,
                     cover_photo: 1,
                     flag: 1,
-                    RestaurantData: 1,
+                    // RestaurantData: 1,
+                    RestaurantData: {
+                        en_name: 1, address: 1, phone_number: 1, cover_photo: 1, photos: 1,
+                        flag: 1
+                    },
                     createdAt: 1
                 }
             }
         ])
 
+        /* Aggregation using Pipeline method */
+        // const productAggregate = DailyProductModel.aggregate([
+        //     {
+        //         $match: matchObj,
+        //     },
+        //     {
+        //         $lookup: {
+        //             from: 'restaurants',
+        //             as: 'RestaurantData',
+        //             let: { restroId: '$restroId' },
+        //             pipeline: [
+        //                 {
+        //                     $match: {
+        //                         $expr: {
+        //                             $and: [
+        //                                 { $eq: ["$_id", "$$restroId"] },
+        //                                 { $eq: ["$flag", 1] },
+        //                             ]
+        //                         }
+        //                     }
+        //                 }
+        //             ]
+        //         }
+        //     },
+        //     { $unwind: { path: "$RestaurantData", preserveNullAndEmptyArrays: true } },
+        //     {
+        //         $project: {
+        //             _id: 1,
+        //             name: 1,
+        //             brand: 1,
+        //             price: 1,
+        //             category: 1,
+        //             cover_photo: 1,
+        //             flag: 1,
+        //             // RestaurantData: 1,
+        //             RestaurantData: {
+        //                 en_name: 1, address: 1, phone_number: 1, cover_photo: 1, photos: 1,
+        //                 flag: 1
+        //             },
+        //             createdAt: 1
+        //         }
+        //     }
+        // ])
+
         const result = await DailyProductModel.aggregatePaginate(
-            platformAggregate,
+            productAggregate,
             options
         )
 
         // appending the live image url
         for (let i = 0; i < result.docs.length; i++) {
             const element = result.docs[i];
-            console.log(element?.cover_photo)
             if (element?.cover_photo) {
                 element.cover_photo = await Helper.getValidImageUrl(element.cover_photo, element.name)
             }
@@ -177,6 +278,10 @@ exports.addDailyProducts = async (req, res) => {
         });
     }
     try {
+        // logged in data coming from middleware .
+        const loggedInUser = req.adminData;
+        // const restaurantData = await RestroModel.findById({ _id: restroId }).select('en_name address phone_number flag')
+
         const Productdata = await DailyProductModel.findOne({
             name: name,
         });
@@ -185,6 +290,8 @@ exports.addDailyProducts = async (req, res) => {
                 message: "Product name already exist",
             });
         }
+
+        const orderId = await Helper.generateRandomString(8);
 
         let createObj = {}
         //     name: name,
@@ -205,11 +312,17 @@ exports.addDailyProducts = async (req, res) => {
         createObj.cover_photo = req.file.path;
 
         const result = new DailyProductModel(createObj);
+        result.order_num = orderId;
 
         await result.save();
 
+        const subject = `Added product ${createObj.name} - ₹${price}`;
+        const emailBody = result;
+
+        await sendEmail.sendProductMail(`${loggedInUser?.email}`, subject, emailBody);
+
         return res.status(201).json({
-            message: "Product is successfully added",
+            message: "Product is successfully added, Mail send",
             result: result,
         });
     } catch (error) {
@@ -224,7 +337,6 @@ exports.addDailyProducts = async (req, res) => {
 exports.editDailyProducts = async (req, res) => {
 
     const id = req.params.id;
-    // console.log(req.body, "req.body")
 
     const {
         name,

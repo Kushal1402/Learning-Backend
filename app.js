@@ -34,7 +34,6 @@ const restaurantRoutes = require("./api/routes/restaurant");
 const productRoutes = require("./api/routes/dailyproducts");
 const adminRoutes = require("./api/routes/admin");
 const newRestro = require('./api/routes/newRestaurant');
-// const soap = require('./api/routes/soap')
 
 app.use((req, res, next) => {
     res.header("Access-Control-Allow-Origin", "*");
@@ -52,6 +51,5 @@ app.use("/api/restaurant", restaurantRoutes);
 app.use("/api/products", productRoutes);
 app.use("/api/admin", adminRoutes);
 app.use('/api/restro', newRestro);
-// app.use('/api/soap', soap);
 
 module.exports = app;

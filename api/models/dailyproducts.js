@@ -1,7 +1,9 @@
 const mongoose = require("mongoose");
-
+const { Schema } = mongoose;
 let aggregatePaginate = require('mongoose-aggregate-paginate-v2');
 let mongoosePaginate = require('mongoose-paginate-v2');
+
+// mongoose.set('strictQuery', true);
 
 const productsSchema = new mongoose.Schema(
     {
@@ -18,11 +20,15 @@ const productsSchema = new mongoose.Schema(
         //     default: ""
         // },
         restroId: {
-            type: mongoose.Schema.Types.ObjectId,
+            type: mongoose.ObjectId,
+            // type: mongoose.Schema.Types.ObjectId,
             default: ""
         },
         price: {
             type: Number,
+            min: [50, 'Must be greater than 50 ₹'],
+            max: [1500, 'Must be less than 1500 ₹'],
+            default: "",
         },
         cover_photo: {
             type: String,
