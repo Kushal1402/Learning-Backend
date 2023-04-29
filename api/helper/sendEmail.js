@@ -7,17 +7,17 @@ exports.sendProductMail = async (to, subject, message) => {
         const mailtemplate = await MailTemplate(message);
 
         const transporter = nodemailer.createTransport({
-            host: 'mail.saturncube.com',
-            port: 465,
+            host: process.env.EMAIL_HOST,
+            port: process.env.EMAIL_PORT,
             secure: true,
             auth: {
-                user: 'kushal.doshi@saturncube.com',
-                pass: 'Kushal@062022'
+                user: process.env.EMAIL_AUTH_USER,
+                pass: process.env.EMAIL_AUTH_PASS
             }
         })
 
         const info = transporter.sendMail({
-            from: "kushal.doshi@saturncube.com",
+            from: process.env.EMAIL_AUTH_USER,
             to: to,
             subject: subject,
             html: mailtemplate,
