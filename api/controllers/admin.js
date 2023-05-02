@@ -23,8 +23,9 @@ exports.signUp = async (req, res) => {
         name: 'required|maxLength:10',
         email: 'required|email',
         password: 'required',
-        role: 'required'
+        role: 'required|integer'
     });
+
     const matched = await objValidation.check();
     if (!matched || matched === false) {
         return res.status(422).send({
@@ -34,7 +35,8 @@ exports.signUp = async (req, res) => {
     }
 
     const adminData = await AdminModel.find({ email: email, flag: 1 })
-    if (adminData.length > 0) {
+
+    if (adminData.length > 0 || adminData[0]?.email === email) {
         return res.status(409).json({
             message: 'Email already exists',
         })
@@ -51,12 +53,19 @@ exports.signUp = async (req, res) => {
             role: role
         }
 
+        let successMessage = "";
+        if (role === 1) {
+            successMessage = "Admin has been successfully created"
+        } else {
+            successMessage = "User has been successfully created"
+        }
+
         const newAdmin = new AdminModel(createAdminObj);
 
         await newAdmin.save();
 
         return res.status(201).json({
-            message: 'Admin has been successfully created',
+            message: successMessage,
             result: newAdmin,
         })
     } catch (error) {
@@ -110,7 +119,7 @@ exports.login = async (req, res) => {
             },
             process.env.JWT_KEY,
             {
-                expiresIn: '1d'
+                expiresIn: '10d'
             }
         )
 

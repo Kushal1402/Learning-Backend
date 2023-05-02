@@ -33,7 +33,8 @@ exports.getDailyProducts = async (req, res) => {
 }
 
 exports.getDailyProductsPaginate = async (req, res, next) => {
-    let { page, limit, search, min, max, category, equal_value } = req.query
+    let { page, limit, search, min, max, category, equal_value } = req.query;
+
     if (search === undefined) {
         search = ''
     }
@@ -68,9 +69,9 @@ exports.getDailyProductsPaginate = async (req, res, next) => {
         options x => Extended capability to ignore all white space characters in the $regex
         options s => Allows the dot character (i.e. *.*) to match all characters including newline characters
     */
-    // matchObj.price = { $eq: equal_value}
     // matchObj.price = { $lte: 150 }
     // matchObj.price = { $gt: 150 }
+    // matchObj.price = { $eq: equal_value}
     // matchObj.category = { $text : {$search : "\"Apple\""} }
 
     try {
