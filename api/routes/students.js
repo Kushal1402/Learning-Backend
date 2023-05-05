@@ -9,5 +9,8 @@ const studentsController = require("../controllers/students");
 
 router.post("/add", adminCheckAuth, studentsController.addStudentData);
 
-router.get("/get", studentsController.getStudentData)
+router.get("/get", studentsController.getStudentData);
+
+router.put("/edit/:id", adminCheckAuth, studentsController.editStudentData);
+
 module.exports = router;

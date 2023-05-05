@@ -10,6 +10,7 @@ exports.generateRandomString = (length, isNumber = false) => {
     for (var i = 0; i < length; i++) {
         result += characters.charAt(Math.floor(Math.random() * charactersLength));
     }
+
     return result;
 };
 
@@ -32,6 +33,24 @@ exports.getValidPdfUrl = async (filename) => {
         filename = process.env.URL + filename;
     }
     return filename;
+}
+
+exports.generateEmail = (enrolNumber) => {
+
+    let num = "123456789";
+    let loopLength = 4;
+    var result = "";
+
+    if (enrolNumber === "" || enrolNumber === undefined) {
+        for (let i = 0; i < loopLength; i++) {
+            result += num.charAt(Math.floor(Math.random() * loopLength));
+        }
+        result += "@mailinator.com"
+    } else {
+        result = enrolNumber + "@mailinator.com"
+    }
+
+    return result;
 }
 
 exports.writeErrorLog = async (req, error) => {

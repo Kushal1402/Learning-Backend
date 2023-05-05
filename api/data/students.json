@@ -1,0 +1,101 @@
+[{
+  "_id": {
+    "$oid": "6451fbd9e0f1fa1de287d7b1"
+  },
+  "name": "TestingData",
+  "enrolment_number": 1001,
+  "contact_number": "7992842688",
+  "email": "test26@mailinator.com",
+  "flag": true,
+  "createdAt": {
+    "$date": {
+      "$numberLong": "1683094489072"
+    }
+  },
+  "updatedAt": {
+    "$date": {
+      "$numberLong": "1683094489072"
+    }
+  },
+  "__v": 0
+},{
+  "_id": {
+    "$oid": "6451fd4740f03bd3f012efc4"
+  },
+  "name": "Testing2Data",
+  "enrolment_number": 1002,
+  "contact_number": "7992842688",
+  "email": "test15@mailinator.com",
+  "flag": true,
+  "createdAt": {
+    "$date": {
+      "$numberLong": "1683094855529"
+    }
+  },
+  "updatedAt": {
+    "$date": {
+      "$numberLong": "1683094855529"
+    }
+  },
+  "__v": 0
+},{
+  "_id": {
+    "$oid": "6451fd93ee5055ba90cfbc43"
+  },
+  "name": "Testing Stud",
+  "enrolment_number": 1003,
+  "contact_number": "7992842669",
+  "email": "test68@mailinator.com",
+  "flag": false,
+  "createdAt": {
+    "$date": {
+      "$numberLong": "1683094931618"
+    }
+  },
+  "updatedAt": {
+    "$date": {
+      "$numberLong": "1683094931618"
+    }
+  },
+  "__v": 0
+},{
+  "_id": {
+    "$oid": "6451fdbdcd8fdb5878fa8ea5"
+  },
+  "name": "Testing N",
+  "enrolment_number": 1004,
+  "contact_number": "7952842669",
+  "email": "test48@mailinator.com",
+  "flag": false,
+  "createdAt": {
+    "$date": {
+      "$numberLong": "1683094973256"
+    }
+  },
+  "updatedAt": {
+    "$date": {
+      "$numberLong": "1683094973256"
+    }
+  },
+  "__v": 0
+},{
+  "_id": {
+    "$oid": "6452219ebf6bb5582ca4601a"
+  },
+  "name": "Test Data",
+  "enrolment_number": 1005,
+  "contact_number": "7952863265",
+  "email": "testD@mailinator.com",
+  "flag": true,
+  "createdAt": {
+    "$date": {
+      "$numberLong": "1683104158522"
+    }
+  },
+  "updatedAt": {
+    "$date": {
+      "$numberLong": "1683104158522"
+    }
+  },
+  "__v": 0
+}]

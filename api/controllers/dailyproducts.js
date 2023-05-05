@@ -76,8 +76,7 @@ exports.getDailyProductsPaginate = async (req, res, next) => {
 
     try {
 
-        /* Learning Aggregate */
-        // const productAggregate = DailyProductModel.aggregate([
+        // const platformAggregate = DailyProductModel.aggregate([
         //     {
         //         $match: matchObj,
         //     },
@@ -147,7 +146,6 @@ exports.getDailyProductsPaginate = async (req, res, next) => {
         //     }
         // ])
 
-        /* Aggregation using ForeignField, LocalField */
         const productAggregate = DailyProductModel.aggregate([
             {
                 $match: matchObj,
@@ -180,7 +178,6 @@ exports.getDailyProductsPaginate = async (req, res, next) => {
             }
         ])
 
-        /* Aggregation using Pipeline method */
         // const productAggregate = DailyProductModel.aggregate([
         //     {
         //         $match: matchObj,

@@ -5,12 +5,14 @@ const AutoIncrement = require('mongoose-sequence')(mongoose);
 
 var studentSchema = new mongoose.Schema(
     {
-        id: {
-            type: Number,
-        },
         name: {
             type: String,
             required: true,
+        },
+        enrolment_number: {
+            type: Number,
+            unique: true,
+            required: true
         },
         contact_number: {
             type: String,
@@ -18,16 +20,11 @@ var studentSchema = new mongoose.Schema(
         },
         email: {
             type: String,
-            required: true
         },
         flag: {
             type: Boolean,
             default: true //true=activated false=deactivated
         },
-        enrolment_number: {
-            type: Number,
-            required: true
-        }
     },
     {
         timestamps: true
@@ -36,7 +33,11 @@ var studentSchema = new mongoose.Schema(
 
 studentSchema.plugin(aggregatePaginate);
 studentSchema.plugin(mongoosePaginate);
-studentSchema.plugin(AutoIncrement, { inc_field: 'id' });
+
+// For indexing the collection(table) either give `UNIQUE:TRUE` in the fields or define modelName.index() like the next line 
+// studentSchema.index({ enrolment_number: 1, email: 1 });
+
+// studentSchema.plugin(AutoIncrement, { inc_field: 'id' });
 // studentSchema.plugin(AutoIncrement, {
 //     id: 'order_seq',
 //     inc_field: "enrolment_number",
