@@ -2,12 +2,15 @@ const mongoose = require("mongoose");
 const niv = require("node-input-validator");
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
+const moment = require("moment")
 
 // import helper
 const Helper = require("../helper/helper");
+const sendEmail = require('../helper/sendEmail')
 
-// import admin model
+// import admin, otp model
 const AdminModel = require("../models/admin");
+const EmailOtpModel = require("../models/emailOtp")
 
 // Sign Up API
 exports.signUp = async (req, res) => {
@@ -55,13 +58,14 @@ exports.signUp = async (req, res) => {
 
         let successMessage = "";
         if (role === 1) {
-            successMessage = "Admin has been successfully created"
+            // successMessage = "Admin account has been successfully created, please check email to verify your account";
+            successMessage = "Admin account has been successfully created";
         } else {
-            successMessage = "User has been successfully created"
+            // successMessage = "User account has been successfully created, please check email to verify your account";
+            successMessage = "User account has been successfully created";
         }
 
         const newAdmin = new AdminModel(createAdminObj);
-
         await newAdmin.save();
 
         return res.status(201).json({
@@ -78,7 +82,6 @@ exports.signUp = async (req, res) => {
 
 // Login through E-Mail & Password API
 exports.login = async (req, res) => {
-
     const {
         email,
         password
@@ -98,16 +101,22 @@ exports.login = async (req, res) => {
 
     try {
 
-        const adminData = await AdminModel.findOne({ email: email, flag: 1 })
+        const adminData = await AdminModel.findOne({ email: email, flag: [1, 2] })
+
         if (adminData === null) {
-            return res.status(401).json({
+            return res.status(401).send({
                 message: 'Invalid Email',
+            })
+        }
+        if (adminData && adminData?.flag === 2) {
+            return res.status(401).send({
+                message: 'Account Deactivated, Please verify your account or contact admin',
             })
         }
 
         const passwordMatch = await bcrypt.compare(password, adminData.password);
         if (passwordMatch === false) {
-            return res.status(401).json({
+            return res.status(401).send({
                 message: 'Invalid password',
             })
         }
@@ -123,13 +132,13 @@ exports.login = async (req, res) => {
             }
         )
 
-        return res.status(200).json({
+        return res.status(200).send({
             admin: adminData,
             message: 'Admin has been successfully login',
             token: token,
         })
     } catch (error) {
-        return res.status(500).json({
+        return res.status(500).send({
             message: "An error occured. Please try again",
             error: error.message,
         });
@@ -300,5 +309,187 @@ exports.getAdminDetail = async (req, res) => {
             message: "Error occurred, Please try again later",
             error: error.message,
         });
+    }
+}
+
+exports.sendMail = async (req, res) => {
+    const {
+        email,
+        resend
+    } = req.body
+
+    const objValidation = new niv.Validator(req.body, {
+        email: 'required|email',
+        resend: 'required|in:1,2', // 1 = send 2 = resend
+    })
+    const matched = await objValidation.check()
+    if (!matched) {
+        return res.status(422).json({
+            message: 'Validation error',
+            error: objValidation.errors,
+        })
+    }
+
+    const emailCheck = await AdminModel.findOne({
+        email: {
+            $regex: email,
+            $options: 'i'
+        }
+    })
+    if (emailCheck === null || !emailCheck) {
+        return res.status(422).send({
+            message: "No account match with this email"
+        })
+    }
+
+    try {
+        const alreadySendEmail = await EmailOtpModel.findOne({
+            email: {
+                $regex: email,
+                $options: "i"
+            }
+        })
+        if (alreadySendEmail?.email === email && resend === "1") {
+            return res.status(400).send({
+                message: "OTP mail already send"
+            })
+        }
+
+        let otp = Helper.generateRandomString(6, true);
+
+        let emailOtpObj = {
+            email: email,
+            code: otp
+        }
+
+        let message = 'OTP has been successfully sent to email'
+        if (resend == 2) {
+            message = 'OTP has been successfully resent to email'
+        }
+
+        const subject = `Confirm your email address`;
+
+        let checkEmailSend = await EmailOtpModel.findOne({
+            email: {
+                $regex: email,
+                $options: 'i'
+            }
+        })
+
+        if (checkEmailSend) {
+            await EmailOtpModel.findByIdAndUpdate(
+                checkEmailSend._id,
+                {
+                    $set: {
+                        code: otp,
+                    },
+                },
+                {
+                    new: true,
+                }
+            );
+        } else {
+            new EmailOtpModel(emailOtpObj).save();
+        }
+
+        await sendEmail.sendOtpMail(email, subject, otp);
+
+        return res.status(200).json({
+            message: message,
+        })
+    } catch (error) {
+        return res.status(500).json({
+            message: 'Error occurred, Please try again later',
+            error: err.message,
+        })
+    }
+}
+
+exports.verifyEmail = async (req, res) => {
+
+    const {
+        email,
+        code
+    } = req.body;
+
+    const objValidation = new niv.Validator(req.body, {
+        email: "required",
+        code: "required"
+    })
+    const matched = await objValidation.check();
+    if (matched === false || !matched) {
+        return res.status(422).send({
+            message: "Validation error",
+            errors: objValidation.errors
+        })
+    }
+
+    try {
+        const userData = await AdminModel.findOne({
+            email: email,
+            flag: [1, 2]
+        })
+        var signUpTime = userData?.createdAt;
+        var signUpTimeCall = moment(moment(signUpTime).format('YYYY-MM-DD hh:mm:ss'));
+        var verifyEmailTime = new Date();
+        var apiCallTime = moment(moment(verifyEmailTime).format('YYYY-MM-DD hh:mm:ss'));
+
+        var timeDifference = apiCallTime.diff(signUpTimeCall, 'seconds')
+
+        if (timeDifference >= 120 && userData?.flag === 2) {
+            return res.status(422).send({
+                message: 'OTP expired, please click on resend otp'
+            })
+        } else if (userData && userData?.flag === 1 && timeDifference >= 120) {
+            return res.status(404).json({
+                message: 'OTP has been already verified',
+            })
+        }
+
+        if (!userData || userData === null) {
+            return res.status(404).json({
+                message: 'Invalid Code or Email not found',
+            })
+        }
+
+        const otpData = await EmailOtpModel.findOne({
+            email: {
+                $regex: email,
+                $options: "i"
+            }
+        })
+        if (otpData === null || !otpData) {
+            return res.status(404).json({
+                message: 'Error occurred, Please try again later',
+            })
+        }
+
+        let result = "";
+        if (otpData && otpData.code === code) {
+            result = await AdminModel.updateOne(
+                {
+                    email: email
+                },
+                {
+                    flag: 1
+                }
+            )
+        } else {
+            return res.status(404).json({
+                message: 'OTP not matched',
+            })
+        }
+
+        return res.status(200).json({
+            message: 'Your email address has been successfully verified',
+            result: result,
+        })
+
+    } catch (error) {
+        console.log("error", error)
+        res.status(500).json({
+            message: 'Error occurred, Please try again later',
+            error: error,
+        })
     }
 }

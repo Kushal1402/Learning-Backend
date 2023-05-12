@@ -23,5 +23,5 @@ const moment = require("moment")
 
 cron.schedule("30 * * * * *", () => {
   // console.log(`Cron run at ${new Date().toLocaleString()}`)
-  console.log(`Cron run at ${moment().format('DD-MM-YYYY hh:mm:ss')} time`)
+  console.log(`Cron run at ${moment().format('DD-MM-YYYY hh:mm:ss A')}`)
 })

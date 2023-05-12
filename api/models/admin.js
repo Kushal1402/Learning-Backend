@@ -26,7 +26,7 @@ const adminSchema = new mongoose.Schema(
         flag: {
             type: Number,
             required: true,
-            default: 1, // * 1 Actived 2 Deactived
+            default: 2, // * 1 Actived 2 Deactived
         },
     },
     { timestamps: true }

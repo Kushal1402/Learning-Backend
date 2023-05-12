@@ -10,7 +10,7 @@ const adminCheckAuth = require('../middleware/admin-auth');
 
 // import controllers
 const adminController = require("../controllers/admin");
-
+const notificationController = require("../controllers/push_notification");
 
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
@@ -65,6 +65,26 @@ router.get(
     '/get/detail/:id',
     adminCheckAuth,
     adminController.getAdminDetail
+)
+router.post(
+    "/send-otp",
+    adminController.sendMail
+)
+router.post(
+    "/verify-otp",
+    adminController.verifyEmail
+)
+
+router.post(
+    "/push-notify",
+    adminCheckAuth,
+    notificationController.sendNotify
+)
+
+router.delete(
+    "/push-notify/:id",
+    adminCheckAuth,
+    notificationController.deleteNotify
 )
 
 module.exports = router;
