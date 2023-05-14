@@ -25,7 +25,8 @@ This repository is made just for learning backend coding in ***Node JS***, ***Ex
  
 
 ## Visitors 
-![visitors](https://visitor-badge.glitch.me/badge?page_id=Kushal1402.Learning-Backend&left_color=lightgreen&right_color=darkgreen&left_text=HelloVisitors)
+<!-- ![visitors](https://visitor-badge.glitch.me/badge?page_id=Kushal1402.Learning-Backend&left_color=lightgreen&right_color=darkgreen&left_text=HelloVisitors) -->
+![visitors](https://hits.dwyl.com/Kushal1402/Learning-Backend.svg?style=flat-square&show=unique)
 
 ## Author
 
